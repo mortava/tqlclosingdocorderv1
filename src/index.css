@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #245F73;
+  --color-primary-hover: #1B4A5B;
+  --color-primary-light: #E6EEF1;
+  --color-secondary: #334155;
+  --color-brand-text: #0B1220;
+  --color-navy: #0F172A;
+  --color-link: #2180CF;
+
+  --color-success: #16A34A;
+  --color-warning: #F59E0B;
+  --color-error: #DC2626;
+
+  --color-bg: #FAFAF8;
+  --color-surface: #F8FAFC;
+  --color-surface-alt: #E2E8F0;
+  --color-border: #CBD5E1;
+
+  --color-gray-50:  #FAFAF8;
+  --color-gray-100: #F8FAFC;
+  --color-gray-200: #E2E8F0;
+  --color-gray-300: #CBD5E1;
+  --color-gray-400: #94A3B8;
+  --color-gray-500: #64748B;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1E293B;
+  --color-gray-900: #0B1220;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(36, 95, 115, 0.25);
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    @apply antialiased m-0;
+    background: var(--color-bg);
+    color: var(--color-brand-text);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  h1 { font-weight: 800; }
+  h2, h3 { font-weight: 700; }
+  h4 { font-weight: 600; }
+
+  ::selection {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+  }
+
+  input, textarea, select {
+    font-family: var(--font-sans);
+  }
+}
