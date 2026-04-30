@@ -11,7 +11,6 @@ interface ContactColumn {
 }
 
 interface FormData {
-  // Header
   tqlLoanNumber: string
   borrowerLastName: string
   loanAmount: string
@@ -21,7 +20,6 @@ interface FormData {
   transactionType: string
   occupancyType: string
 
-  // Contact grid
   brokerName: ContactColumn
   stateLic: ContactColumn
   nmlsId: ContactColumn
@@ -32,12 +30,10 @@ interface FormData {
   email: ContactColumn
   phone: ContactColumn
 
-  // Special fields
   titleHolders: string
   vestingMethod: string
   closingDocEmail: string
 
-  // Fees
   originationFee: string
   tqlUwFee: string
   discountFee: string
@@ -52,7 +48,6 @@ interface FormData {
   expectedTotal: string
   authorizedBy: string
 
-  // Notes
   notes: string
 }
 
@@ -71,7 +66,7 @@ const initialForm = (): FormData => ({
   dateNeeded: '',
   lockedRate: '',
   loanProduct: '30yr Fixed',
-  transactionType: 'Purchase',
+  transactionType: 'Refinance - Rate & Term',
   occupancyType: 'Primary',
 
   brokerName: emptyContact(),
@@ -169,31 +164,65 @@ function SelectInput({
   )
 }
 
-// Contact grid row
+// Contact grid row — shows broker + escrow always; buyer/seller only when isPurchase
 function ContactRow({
   label,
   value,
   onChange,
+  isPurchase,
 }: {
   label: string
   value: ContactColumn
   onChange: (v: ContactColumn) => void
+  isPurchase: boolean
 }) {
-  const cols: Array<keyof ContactColumn> = ['brokerContact', 'buyersAgent', 'sellersAgent', 'escrow']
   return (
     <tr className="border-b border-gray-200">
       <td className="py-2 pr-3 text-xs font-medium text-gray-600 whitespace-nowrap w-36">{label}</td>
-      {cols.map(col => (
-        <td key={col} className="py-1.5 px-1">
+      {/* Broker Contact */}
+      <td className="py-1.5 px-1">
+        <input
+          type="text"
+          value={value.brokerContact}
+          onChange={e => onChange({ ...value, brokerContact: e.target.value })}
+          className="w-full h-8 rounded-[6px] border border-gray-300 bg-white px-2 text-sm
+            focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+        />
+      </td>
+      {/* Escrow / Settlement — always visible, right after Broker */}
+      <td className="py-1.5 px-1">
+        <input
+          type="text"
+          value={value.escrow}
+          onChange={e => onChange({ ...value, escrow: e.target.value })}
+          className="w-full h-8 rounded-[6px] border border-gray-300 bg-white px-2 text-sm
+            focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+        />
+      </td>
+      {/* Buyer's Agent — Purchase only */}
+      {isPurchase && (
+        <td className="py-1.5 px-1">
           <input
             type="text"
-            value={value[col]}
-            onChange={e => onChange({ ...value, [col]: e.target.value })}
+            value={value.buyersAgent}
+            onChange={e => onChange({ ...value, buyersAgent: e.target.value })}
             className="w-full h-8 rounded-[6px] border border-gray-300 bg-white px-2 text-sm
               focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </td>
-      ))}
+      )}
+      {/* Seller's Agent — Purchase only */}
+      {isPurchase && (
+        <td className="py-1.5 px-1">
+          <input
+            type="text"
+            value={value.sellersAgent}
+            onChange={e => onChange({ ...value, sellersAgent: e.target.value })}
+            className="w-full h-8 rounded-[6px] border border-gray-300 bg-white px-2 text-sm
+              focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+        </td>
+      )}
     </tr>
   )
 }
@@ -241,6 +270,8 @@ export default function App() {
   const [form, setForm] = useState<FormData>(initialForm)
   const [status, setStatus] = useState<SubmitStatus>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+
+  const isPurchase = form.transactionType === 'Purchase'
 
   const set = useCallback(<K extends keyof FormData>(key: K, value: FormData[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -306,43 +337,27 @@ export default function App() {
   }
 
   const contactRows: Array<{ label: string; key: keyof FormData }> = [
-    { label: 'Broker Name', key: 'brokerName' },
-    { label: 'State Lic #', key: 'stateLic' },
-    { label: 'NMLS ID', key: 'nmlsId' },
-    { label: 'Address', key: 'address' },
-    { label: 'City/St/Zip', key: 'cityStZip' },
-    { label: 'Contact', key: 'contact' },
+    { label: 'Broker Name',            key: 'brokerName' },
+    { label: 'State Lic #',            key: 'stateLic' },
+    { label: 'NMLS ID',               key: 'nmlsId' },
+    { label: 'Address',               key: 'address' },
+    { label: 'City/St/Zip',           key: 'cityStZip' },
+    { label: 'Contact',               key: 'contact' },
     { label: 'Contact Lic # (If App)', key: 'contactLic' },
-    { label: 'Email @', key: 'email' },
-    { label: 'Phone #', key: 'phone' },
+    { label: 'Email @',               key: 'email' },
+    { label: 'Phone #',               key: 'phone' },
   ]
 
   return (
     <div className="min-h-screen bg-bg py-8 px-4">
       <div className="max-w-5xl mx-auto">
 
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 text-white fill-white">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                  <polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="white" strokeWidth="1.5"/>
-                </svg>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-primary uppercase tracking-widest">Total Quality Lending</div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider">Broker Portal</div>
-              </div>
-            </div>
-          </div>
-          <div className="text-right">
-            <h1 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-              CLOSING DOC ORDER
-            </h1>
-            <p className="text-xs text-gray-500 italic">Please complete all fields</p>
-          </div>
+        {/* Header — title only, no logo */}
+        <div className="text-right mb-6">
+          <h1 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
+            CLOSING DOC ORDER
+          </h1>
+          <p className="text-xs text-gray-500 italic">Please complete all fields</p>
         </div>
 
         {/* Form */}
@@ -383,16 +398,14 @@ export default function App() {
                 onChange={v => set('lockedRate', v)}
                 placeholder="0.000%"
               />
-              <div className="grid grid-cols-1 gap-4">
-                <SelectInput
-                  label="Loan Product"
-                  value={form.loanProduct}
-                  onChange={v => set('loanProduct', v)}
-                  options={['30yr Fixed', '15yr Fixed', '40yr Fixed', '5/6 ARM', '7/6 ARM', '10/6 ARM', 'I/O Fixed', 'I/O ARM']}
-                />
-              </div>
               <SelectInput
-                label="Transaction Type"
+                label="Loan Product"
+                value={form.loanProduct}
+                onChange={v => set('loanProduct', v)}
+                options={['30yr Fixed', '15yr Fixed', '40yr Fixed', '5/6 ARM', '7/6 ARM', '10/6 ARM', 'I/O Fixed', 'I/O ARM']}
+              />
+              <SelectInput
+                label="Loan Purpose"
                 value={form.transactionType}
                 onChange={v => set('transactionType', v)}
                 options={['Purchase', 'Refinance - Rate & Term', 'Refinance - Cash Out']}
@@ -416,19 +429,22 @@ export default function App() {
                 <thead>
                   <tr>
                     <th className="w-36" />
-                    {[
-                      'Broker Contact Info',
-                      'Purchase — Buyers Agent',
-                      'Purchase — Sellers Agent',
-                      'Escrow / Settlement',
-                    ].map(h => (
-                      <th
-                        key={h}
-                        className="py-2 px-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary rounded-t-md text-center"
-                      >
-                        {h}
+                    <th className="py-2 px-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary rounded-t-md text-center">
+                      Broker Contact Info
+                    </th>
+                    <th className="py-2 px-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary rounded-t-md text-center">
+                      Escrow / Settlement
+                    </th>
+                    {isPurchase && (
+                      <th className="py-2 px-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary rounded-t-md text-center">
+                        Purchase — Buyers Agent
                       </th>
-                    ))}
+                    )}
+                    {isPurchase && (
+                      <th className="py-2 px-1 text-[10px] font-bold uppercase tracking-wider text-white bg-primary rounded-t-md text-center">
+                        Purchase — Sellers Agent
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -438,13 +454,13 @@ export default function App() {
                       label={label}
                       value={form[key] as ContactColumn}
                       onChange={v => setContact(key, v)}
+                      isPurchase={isPurchase}
                     />
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Special wide fields */}
             <div className="mt-4 space-y-3">
               <FieldInput
                 label="List all names that will hold Title"
@@ -476,8 +492,6 @@ export default function App() {
               Confirm Broker Fee Details
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-              {/* Left fees */}
               <table className="w-full">
                 <thead>
                   <tr>
@@ -499,7 +513,6 @@ export default function App() {
                 </tbody>
               </table>
 
-              {/* Right fees */}
               <table className="w-full">
                 <thead>
                   <tr>
@@ -521,7 +534,6 @@ export default function App() {
               </table>
             </div>
 
-            {/* Expected Total + Authorized By */}
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               <FieldInput
                 label="Expected Total $"
